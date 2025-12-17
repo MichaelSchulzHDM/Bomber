@@ -15,9 +15,22 @@ function App() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Learn React
+          Learn React 
         </a>
       </header>
+      <div className="penis">
+        <h1>Bomber</h1>
+        <p>Welcome to the Bomber game!</p>
+        <table>
+          <tr>
+            <th>Spieler</th>
+            <th>Dörfer</th>
+            <th>Punkte</th>
+            <th>Status</th>
+          </tr>
+        </table>
+      </div>
+
     </div>
   );
 }
