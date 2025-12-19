@@ -1,6 +1,7 @@
 import logo from './logo.svg';
 import './App.css';
 
+
 function App() {
   return (
     <div className="App">
@@ -18,18 +19,7 @@ function App() {
           Learn React 
         </a>
       </header>
-      <div className="penis">
-        <h1>Bomber</h1>
-        <p>Welcome to the Bomber game!</p>
-        <table>
-          <tr>
-            <th>Spieler</th>
-            <th>Dörfer</th>
-            <th>Punkte</th>
-            <th>Status</th>
-          </tr>
-        </table>
-      </div>
+      
 
     </div>
   );
