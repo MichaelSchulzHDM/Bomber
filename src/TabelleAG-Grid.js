@@ -1,25 +1,27 @@
-import { DataGrid } from '@mui/x-data-grid';
 import { AgGridReact } from 'ag-grid-react';
+import React, { useMemo, useState, StrictMode, useRef  } from "react";
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
-    
-import Paper from '@mui/material/Paper';
+import { ModuleRegistry, AllCommunityModule, themeMaterial } from 'ag-grid-community';
+import { RowGroupingModule } from 'ag-grid-enterprise';
+ModuleRegistry.registerModules([AllCommunityModule, RowGroupingModule]);
 
-const columns = [
-    { field: 'rank', headerName: 'Rank', width: 130 },
-    { field: 'id', headerName: 'ID', width: 70 },
-    { field: 'name', headerName: 'Name', width: 130 },
-    { field: 'tag', headerName: 'Stamm', width: 130 },
-    { field: 'villages', headerName: 'Villages', width: 130 },
-    { field: 'points', headerName: 'Points', width: 130 }
 
-];
+const columns = ([
+    { field: 'rank' },
+    { field: 'id' },
+    { field: 'name' },
+    { field: 'tag', rowGroup: true, hide: true },
+    { field: 'villages' },
+    { field: 'points' }
 
-async function loadAllyData() {
+]);
+
+
+export async function loadAllyData() {
     const allyurl = 'https://corsproxy.io/?https://de242.die-staemme.de/map/ally.txt';
     const allyresponse = await fetch(allyurl);
     const allytext = await allyresponse.text();
-    console.log(allytext);
     // Plus-Zeichen durch Leerzeichen ersetzen
     const allydecodedText = allytext.replace(/\+/g, ' ');
     const finalAllyText = decodeURIComponent(allydecodedText);
@@ -27,7 +29,6 @@ async function loadAllyData() {
     const playerurl = 'https://corsproxy.io/?https://de242.die-staemme.de/map/player.txt';
     const playerresponse = await fetch(playerurl);
     const playertext = await playerresponse.text();
-    console.log(playertext);
     const playerdecodedText = playertext.replace(/\+/g, ' ');
     const finalPlayerText = decodeURIComponent(playerdecodedText);
 
@@ -115,20 +116,61 @@ async function loadAllyData() {
 
 const rows = await loadAllyData();
 
+const percentwithdeleting = rows.filter(row => row.name.includes('[LÖSCHEN]')).length / rows.length * 100;
 
-const paginationModel = { page: 0, pageSize: 50 };
+
+
+
 
 export default function DataTable() {
+    const [sum, setSum] = useState(0);
+    const gridRef = useRef();
+    const onSelectionChanged = () => {
+
+        const selectedRows = gridRef.current.api.getSelectedRows();
+
+        const total = selectedRows.reduce(
+            (sum, row) => sum + row.villages,
+            0
+        );
+
+        setSum(total);
+    };
+    const rowSelection = useMemo(() => {
+        return {
+            mode: 'multiRow',
+            groupSelects: 'descendants',
+            checkboxLocation: 'autoGroupColumn'
+        };
+    }, []);
+    const containerStyle = useMemo(() => ({ width: "100%", height: "100%" }), []);
+    const gridStyle = useMemo(() => ({ height: "100%", width: "100%" }), []);
+
     return (
-        <Paper sx={{ height: 400, width: '100%' }}>
-            <DataGrid
-                rows={rows}
-                columns={columns}
-                initialState={{ pagination: { paginationModel } }}
-                pageSizeOptions={[5, 50]}
-                checkboxSelection
-                sx={{ border: 0 }}
-            />
-        </Paper>
+
+        <div style={containerStyle}>
+            <div style={gridStyle}>
+                <div className='ag-theme-alpine' style={{ height: 600, width: '100%' }}>
+                    <AgGridReact
+                        ref={gridRef}
+                        theme={themeMaterial}
+                        rowData={rows}
+                        columnDefs={columns}
+                        rowSelection={rowSelection}
+                        pagination={true}
+                        paginationPageSize={50}
+                        onSelectionChanged={onSelectionChanged}
+
+
+                    />
+                </div>
+            </div>
+            {/* Label */}
+            <div style={{ marginTop: 10 }}>
+                <strong>Summe der selektierten Preise:</strong> {sum}
+            </div>
+        </div>
+
     );
 }
+
