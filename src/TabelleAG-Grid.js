@@ -16,7 +16,23 @@ const columns = ([
     { field: 'points' },
     { field: 'iswinner' },
     { field: 'willdelete' },
-    { field: 'willmaybe' }
+    { field: 'willmaybe' },
+    {
+    field: "active",
+    headerName: "Aktiv",
+    cellRenderer: (params) => {
+      return (
+        <button
+          onClick={() => {
+            params.node.setDataValue("active", !params.value);
+          }}
+          
+        >
+          {params.value ? "Delee" : "Set"}
+        </button>
+      );
+    },
+  }
 
 ]);
 
