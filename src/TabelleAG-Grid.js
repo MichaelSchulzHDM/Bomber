@@ -142,7 +142,7 @@ export default function DataTable() {
     const [sumVillagesWinner, setSumVillagesWinner] = useState(0);
     const [sumVillagesSave, setSumVillagesSave] = useState(0);
     const [sumVillagesMaybe, setSumVillagesMaybe] = useState(0);
-    
+
 
     useEffect(() => {
         async function calculateSumVillagesWinner() {
@@ -154,7 +154,7 @@ export default function DataTable() {
 
     useEffect(() => {
         async function calculateSumVillagesSave() {
-            const sum = rowData.reduce((sum, player) => player.willdelete ? sum + player.villages : sum, 0);
+            const sum = rowData.reduce((sum, player) => player.iswinner === true || player.willdelete ? sum + player.villages : sum, 0);
             setSumVillagesSave(sum);
         }
         calculateSumVillagesSave();
@@ -162,10 +162,44 @@ export default function DataTable() {
 
     useEffect(() => {
         async function calculateSumVillagesMaybe() {
-            const sum = rowData.reduce((sum, player) => player.willmaybe ? sum + player.villages : sum, 0);
+            const sum = rowData.reduce((sum, player) => player.iswinner === true || player.willdelete === true || player.willmaybe === true ? sum + player.villages : sum, 0);
             setSumVillagesMaybe(sum);
         }
         calculateSumVillagesMaybe();
+    }, [rowData]);
+
+    const [percentVillagesWinner, setPercentVillagesWinner] = useState(0);
+    const [percentVillagesSave, setPercentVillagesSave] = useState(0);
+    const [percentVillagesMaybe, setPercentVillagesMaybe] = useState(0);
+
+    useEffect(() => {
+        async function calculatePercentVillagesWinner() {
+            const sum = rowData.reduce((sum, player) => player.iswinner ? sum + player.villages : sum, 0);
+            const all = rowData.reduce((all, player) => all + player.villages, 0);
+            const percentValue = all === 0 ? 0 : ((sum / all) * 100).toFixed(2);
+            setPercentVillagesWinner(percentValue);
+        }
+        calculatePercentVillagesWinner();
+    }, [rowData]);
+
+    useEffect(() => {
+        async function calculatePercentVillagesSave() {
+            const sum = rowData.reduce((sum, player) => player.iswinner === true || player.willdelete ? sum + player.villages : sum, 0);
+            const all = rowData.reduce((all, player) => all + player.villages, 0);
+            const percentValue = all === 0 ? 0 : ((sum / all) * 100).toFixed(2);
+            setPercentVillagesSave(percentValue);
+        }
+        calculatePercentVillagesSave();
+    }, [rowData]);
+
+    useEffect(() => {
+        async function calculatePercentVillagesMaybe() {
+            const sum = rowData.reduce((sum, player) => player.iswinner === true || player.willdelete === true || player.willmaybe === true ? sum + player.villages : sum, 0);
+            const all = rowData.reduce((all, player) => all + player.villages, 0);
+            const percentValue = all === 0 ? 0 : ((sum / all) * 100).toFixed(2);
+            setPercentVillagesMaybe(percentValue);
+        }
+        calculatePercentVillagesMaybe();
     }, [rowData]);
 
     useEffect(() => {
@@ -385,18 +419,22 @@ export default function DataTable() {
 
                     </p>
                     <p>
-                        <label>Siegerdörfer: <strong>{sumVillagesWinner}</strong></label>
-                        <label style={{ marginLeft: 10 }}>(x%)  </label>
+                        <label>
+                            Siegerdörfer: <strong>{sumVillagesWinner}</strong>
+                        </label>
+                        <label style={{ marginLeft: 10 }}>({percentVillagesWinner}%)  </label>
                     </p>
 
 
                     <label>
-                        Safe Löschen Dörfer: <strong>{sumVillagesSave}</strong>
+                        Mit Safe Löschen Dörfer: <strong>{sumVillagesSave}</strong>
                     </label>
+                    <label style={{ marginLeft: 10 }}>({percentVillagesSave}%)  </label>
                     <br />
                     <label>
-                        Vielleicht Löschen Dörfer: <strong>{sumVillagesMaybe}</strong>
+                        Mit Vielleicht Löschen Dörfer: <strong>{sumVillagesMaybe}</strong>
                     </label>
+                    <label style={{ marginLeft: 10 }}>({percentVillagesMaybe}%)  </label>
 
                 </div>
                 <div>
