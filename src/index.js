@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import './App.css';
 import App from './App';
-import Calculation from './calc';
 //import Tabelle from './Tabelle';
 import Tabelle from'./TabelleAG-Grid';
 import reportWebVitals from './reportWebVitals';

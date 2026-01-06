@@ -1,5 +1,5 @@
 import { AgGridReact } from 'ag-grid-react';
-import React, { useMemo, useState, StrictMode, useRef, useEffect, useCallback } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import { ModuleRegistry, AllCommunityModule, themeMaterial } from 'ag-grid-community';
@@ -7,37 +7,8 @@ import { RowGroupingModule } from 'ag-grid-enterprise';
 ModuleRegistry.registerModules([AllCommunityModule, RowGroupingModule]);
 
 
-const columns = ([
-    { field: 'rank' },
-    { field: 'id' },
-    { field: 'name' },
-    { field: 'tag', rowGroup: true, hide: true },
-    { field: 'villages' },
-    { field: 'points' },
-    { field: 'iswinner' },
-    { field: 'willdelete' },
-    { field: 'willmaybe' },
-    {
-    field: "active",
-    headerName: "Aktiv",
-    cellRenderer: (params) => {
-      return (
-        <button
-          onClick={() => {
-            params.node.setDataValue("active", !params.value);
-          }}
-          
-        >
-          {params.value ? "Delee" : "Set"}
-        </button>
-      );
-    },
-  }
 
-]);
-
-
-export async function loadAllyData() {
+async function loadAllyData() {
     const allyurl = 'https://corsproxy.io/?https://de242.die-staemme.de/map/ally.txt';
     const allyresponse = await fetch(allyurl);
     const allytext = await allyresponse.text();
@@ -93,7 +64,8 @@ export async function loadAllyData() {
             rank,
             iswinner,
             willdelete,
-            willmaybe
+            willmaybe,
+            eins
         ] = playerline.split(',');
 
 
@@ -104,9 +76,10 @@ export async function loadAllyData() {
             villages: Number(villages),
             points: Number(points),
             rank: Number(rank),
-            iswinner: Boolean(iswinner),
-            willdelete: Boolean(willdelete),
-            willmaybe: Boolean(willmaybe),
+            iswinner: false,
+            willdelete: false,
+            willmaybe: false,
+            eins: Boolean(eins)
         };
     });
     playerrows.sort((a, b) => a.rank - b.rank);
@@ -139,22 +112,19 @@ export async function loadAllyData() {
 }
 
 
-const rows = await loadAllyData();
-
-async function getNumberVillagesTotal() {
-    const data = rows;
-    const sumVillages = data.reduce((sum, player) => {
-        return sum + player.villages;
-    }, 0);
-    console.log(sumVillages);
-    return sumVillages;
-}
-
-
-
 export default function DataTable() {
 
     const [rowData, setRowData] = useState([]);
+
+    useEffect(() => {
+        async function loadData() {
+            const data = await loadAllyData(); // ⬅️ deine Funktion
+            setRowData(data);                  // ⬅️ HIER passiert es
+        }
+
+        loadData();
+    }, []);
+
     const [sumVillagesWinner, setSumVillagesWinner] = useState(0);
     const [sumVillagesSave, setSumVillagesSave] = useState(0);
     const [sumVillagesMaybe, setSumVillagesMaybe] = useState(0);
@@ -218,14 +188,7 @@ export default function DataTable() {
         calculatePercentVillagesMaybe();
     }, [rowData]);
 
-    useEffect(() => {
-        async function loadData() {
-            const data = await loadAllyData(); // ⬅️ deine Funktion
-            setRowData(data);                  // ⬅️ HIER passiert es
-        }
 
-        loadData();
-    }, []);
 
 
 
@@ -396,12 +359,187 @@ export default function DataTable() {
         }
 
         loadVillageCountTotal();
-    }, []);
+    });
+
+    async function getNumberVillagesTotal() {
+        const data = rowData;
+        const sumVillages = data.reduce((sum, player) => {
+            return sum + player.villages;
+        }, 0);
+        console.log(sumVillages);
+        return sumVillages;
+    }
+
+    const setWinner = (p) => {
+        // 🔒 Guard – WICHTIG
+        if (!p.data) return null;
+
+        const handleClick = () => {
+            const newValue = !p.data.iswinner;
+
+            setRowData(prev =>
+                prev.map(row =>
+                    row.id === p.data.id
+                        ? { ...row, iswinner: newValue }
+                        : row
+                )
+            );
+        };
+
+        return (
+            <button onClick={handleClick}>
+                {p.data.iswinner ? "Siegerplatz" : "Kein Siegerplatz"}
+            </button>
+        );
+    };
+
+    const setMaybe = (p) => {
+        // 🔒 Guard – WICHTIG
+        if (!p.data) return null;
+
+        const handleClick = () => {
+            const newValue = !p.data.willmaybe;
+
+            setRowData(prev =>
+                prev.map(row =>
+                    row.id === p.data.id
+                        ? { ...row, willmaybe: newValue }
+                        : row
+                )
+            );
+        };
+
+        return (
+            <button onClick={handleClick}>
+                {p.data.willmaybe ? "Vielleicht" : "Löscht nicht"}
+            </button>
+        );
+    };
+
+    const setDelte = (p) => {
+        // 🔒 Guard – WICHTIG
+        if (!p.data) return null;
+
+        const handleClick = () => {
+            const newValue = !p.data.willdelete;
+
+            setRowData(prev =>
+                prev.map(row =>
+                    row.id === p.data.id
+                        ? { ...row, willdelete: newValue }
+                        : row
+                )
+            );
+        };
+
+        return (
+            <button onClick={handleClick}>
+                {p.data.willdelete ? "Löscht" : "Löscht nicht"}
+            </button>
+        );
+    };
 
 
+    const columns = useMemo(() => {
+        return [
+            { field: 'rank', width: 70 },
+            { field: 'id', width: 110, hide: true },
+            { field: 'name' },
+            { field: 'tag', rowGroup: true, hide: true },
+            { field: 'villages', width: 80 },
+            { field: 'points' },
+            { field: 'iswinner', hide: true},
+            { field: 'willdelete', hide: true },
+            { field: 'willmaybe', hide: true },
+            {
+                field: "winner",
+                headerName: "Winner",
+                cellRenderer: setWinner,
+            },
+            {
+                field: "delete",
+                headerName: "Delete",
+                cellRenderer: setDelte,
+            },
+            {
+                field: "Maybe",
+                headerName: "Maybe",
+                cellRenderer: setMaybe,
+            }
+
+        ]
+    });
+
+    /*
+
+    {
+            field: "active",
+            headerName: "Aktiv",
+            cellRenderer: (params) => {
+                return (
+                    <button
+                        onClick={() => {
+                            const newValue = !params.value;
+                            console.log("Neuer Wert:", newValue);
+
+                            params.node.setDataValue("active", newValue);
+                        }}
+
+                    >
+                        {params.value ? "Winner" : "Looser"}
+                    </button>
+                );
+            },
+        }
 
 
-
+    const toggleActive = useCallback((rowId) => {
+            console.log("Toggling active for rowId:", rowId);
+            setRowData((prev) =>
+                prev.map((row) =>
+                    row.id === rowId
+                        ? { ...row, active: !row.active }
+                        : row
+                )
+            );
+        }, []);
+    
+        const ToggleButtonRenderer = (props) => {
+            const active = props.data?.active; // 🔑 NICHT props.value
+            console.log("Rendering ToggleButtonRenderer for rowId:", props.node.id, "active:", active);
+    
+            return (
+                <button onClick={() => props.toggleActive(props.node.id)}>
+                    {active ? "Delete" : "Set"}
+                </button>
+            );
+        };
+    
+    
+        const columns = useMemo(
+            () => [
+                { field: 'rank', width: 70 },
+                { field: 'id', width: 110, hide: true },
+                { field: 'name' },
+                { field: 'tag', rowGroup: true, hide: true },
+                { field: 'villages', width: 80 },
+                { field: 'points' },
+                { field: 'iswinner' },
+                { field: 'willdelete' },
+                { field: 'willmaybe' },
+                {
+                    field: "active",
+                    headerName: "Aktiv",
+                    cellRenderer: ToggleButtonRenderer,
+                    cellRendererParams: {
+                        toggleActive,
+                    },
+                }
+    
+            ],
+            [toggleActive]
+        );
+    */
     return (
 
         <div style={containerStyle}>
