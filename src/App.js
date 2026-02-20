@@ -1,25 +1,23 @@
-import logo from './logo.svg';
 import './App.css';
+import React, { useMemo, useState } from 'react';
+import { ThemeProvider, CssBaseline } from '@mui/material';
+import { getTheme } from './theme';
+import Header from './Header';
+import Tabelle from './TabelleAG-Grid';
 
 function App() {
+
+  const [mode, setMode] = useState('light');
+
+  const theme = useMemo(() => getTheme(mode), [mode]);
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-        
-      </header>
-      <table id="dataTable" border="1"></table>
+    <div className="App-container">
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Header mode={mode} setMode={setMode} />
+        <Tabelle mode={mode} setMode={setMode} />
+
+      </ThemeProvider>
     </div>
   );
 }

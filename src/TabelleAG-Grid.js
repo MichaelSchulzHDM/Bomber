@@ -1,9 +1,21 @@
 import { AgGridReact } from 'ag-grid-react';
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-alpine.css';
-import { ModuleRegistry, AllCommunityModule, themeMaterial } from 'ag-grid-community';
+import 'ag-grid-community/styles/ag-theme-material.css';
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import { useTheme } from '@mui/material/styles';
 import { RowGroupingModule } from 'ag-grid-enterprise';
+import {
+    AllCommunityModule,
+    ModuleRegistry,
+    colorSchemeDarkBlue,
+    themeQuartz,
+} from "ag-grid-community";
+import './App.css';
+
 ModuleRegistry.registerModules([AllCommunityModule, RowGroupingModule]);
 
 
@@ -62,9 +74,6 @@ async function loadAllyData() {
             villages,
             points,
             rank,
-            iswinner,
-            willdelete,
-            willmaybe,
             eins
         ] = playerline.split(',');
 
@@ -112,7 +121,7 @@ async function loadAllyData() {
 }
 
 
-export default function DataTable() {
+function DataTable() {
 
     const [rowData, setRowData] = useState([]);
 
@@ -188,36 +197,18 @@ export default function DataTable() {
         calculatePercentVillagesMaybe();
     }, [rowData]);
 
-
-
-
-
-
-    const [sum, setSum] = useState(0);
     const gridRef = useRef();
-    const onSelectionChanged = () => {
 
-        const selectedRows = gridRef.current.api.getSelectedRows();
-
-        const total = selectedRows.reduce(
-            (sum, row) => sum + row.villages,
-            0
-        );
-
-        setSum(total);
-    };
 
     const rowSelection = useMemo(() => {
         return {
             mode: 'multiRow',
             groupSelects: 'descendants',
-            checkboxLocation: 'autoGroupColumn'
+            checkboxLocation: 'autoGroupColumn',
+            enableSelectionWithoutKeys: true,
+            enableClickSelection: true,
         };
     }, []);
-
-
-    const containerStyle = useMemo(() => ({ width: "100%", height: "100%" }), []);
-    const gridStyle = useMemo(() => ({ height: "100%", width: "100%" }), []);
 
     const winner = () => {
         const selectedNodes = gridRef.current.api.getSelectedNodes();
@@ -448,7 +439,7 @@ export default function DataTable() {
             { field: 'tag', rowGroup: true, hide: true },
             { field: 'villages', width: 80 },
             { field: 'points' },
-            { field: 'iswinner', hide: true},
+            { field: 'iswinner', hide: true },
             { field: 'willdelete', hide: true },
             { field: 'willmaybe', hide: true },
             {
@@ -470,140 +461,106 @@ export default function DataTable() {
         ]
     });
 
-    /*
 
-    {
-            field: "active",
-            headerName: "Aktiv",
-            cellRenderer: (params) => {
-                return (
-                    <button
-                        onClick={() => {
-                            const newValue = !params.value;
-                            console.log("Neuer Wert:", newValue);
+    const theme = useTheme();
 
-                            params.node.setDataValue("active", newValue);
-                        }}
+    const isDark = theme.palette.mode === "dark";
 
-                    >
-                        {params.value ? "Winner" : "Looser"}
-                    </button>
-                );
-            },
-        }
-
-
-    const toggleActive = useCallback((rowId) => {
-            console.log("Toggling active for rowId:", rowId);
-            setRowData((prev) =>
-                prev.map((row) =>
-                    row.id === rowId
-                        ? { ...row, active: !row.active }
-                        : row
-                )
-            );
-        }, []);
-    
-        const ToggleButtonRenderer = (props) => {
-            const active = props.data?.active; // 🔑 NICHT props.value
-            console.log("Rendering ToggleButtonRenderer for rowId:", props.node.id, "active:", active);
-    
-            return (
-                <button onClick={() => props.toggleActive(props.node.id)}>
-                    {active ? "Delete" : "Set"}
-                </button>
-            );
-        };
-    
-    
-        const columns = useMemo(
-            () => [
-                { field: 'rank', width: 70 },
-                { field: 'id', width: 110, hide: true },
-                { field: 'name' },
-                { field: 'tag', rowGroup: true, hide: true },
-                { field: 'villages', width: 80 },
-                { field: 'points' },
-                { field: 'iswinner' },
-                { field: 'willdelete' },
-                { field: 'willmaybe' },
-                {
-                    field: "active",
-                    headerName: "Aktiv",
-                    cellRenderer: ToggleButtonRenderer,
-                    cellRendererParams: {
-                        toggleActive,
-                    },
-                }
-    
-            ],
-            [toggleActive]
-        );
-    */
     return (
-
-        <div style={containerStyle}>
-            <div style={gridStyle}>
-                <div className='ag-theme-alpine' style={{ height: 600, width: '100%' }}>
-                    <AgGridReact
-                        ref={gridRef}
-                        theme={themeMaterial}
-                        rowData={rowData}
-                        columnDefs={columns}
-                        rowSelection={rowSelection}
-                        pagination={true}
-                        paginationPageSize={50}
-                        onSelectionChanged={onSelectionChanged}
-                        getRowId={(params) => params.data.id}
-
-
-                    />
-                </div>
-            </div>
-            {/* Label */}
-            <div style={{ marginTop: 10 }}>
-                <strong>Summe der selektierten Preise:</strong> {sum}
-            </div>
-
-            <div>
-                <div>
-                    <h1>Aktueller Stand</h1>
-                    <p>
-                        <label>Alle Dörfer: <strong>{villageCounttotal.toLocaleString()}</strong></label>
-
-                    </p>
-                    <p>
-                        <label>
-                            Siegerdörfer: <strong>{sumVillagesWinner}</strong>
-                        </label>
-                        <label style={{ marginLeft: 10 }}>({percentVillagesWinner}%)  </label>
-                    </p>
+        <Box sx={{
+            width: 1370, display: "flex", flexDirection: "column", gap: 3, '& .ag-theme-material': {
+                '--ag-background-color': isDark ? '#121212' : '#ffffff',
+                '--ag-row-background-color': isDark ? '#1e1e1e' : '#ffffff',
+                '--ag-header-background-color': isDark ? '#1e1e1e' : '#f5f5f5',
+                '--ag-foreground-color': isDark ? '#ffffff' : '#000000',
+                '--ag-border-color': isDark
+                    ? 'rgba(255,255,255,0.12)'
+                    : 'rgba(0,0,0,0.12)',
+                '--ag-row-hover-color': isDark
+                    ? 'rgba(255,255,255,0.08)'
+                    : 'rgba(0,0,0,0.04)',
+            },
+        }}>
+            {/* Grid */}
+            <Box
+                key={theme.palette.mode}
+                className="ag-theme-material"
+                sx={{
+                    height: 600, width: "100%",
 
 
-                    <label>
-                        Mit Safe Löschen Dörfer: <strong>{sumVillagesSave}</strong>
-                    </label>
-                    <label style={{ marginLeft: 10 }}>({percentVillagesSave}%)  </label>
-                    <br />
-                    <label>
-                        Mit Vielleicht Löschen Dörfer: <strong>{sumVillagesMaybe}</strong>
-                    </label>
-                    <label style={{ marginLeft: 10 }}>({percentVillagesMaybe}%)  </label>
+                }}
+            >
 
-                </div>
-                <div>
-                    <button onClick={winner}>Als Sieger Festlegen</button>
-                    <button onClick={willDelte}>Als Save Löschen Festlegen</button>
-                    <button onClick={maybe}>löscht vielleicht</button>
-                </div>
-                <div>
-                    <button onClick={notwinner}>Siegerplatz aberkennen</button>
-                    <button onClick={willnotDelte}>Save löschen entfernen</button>
-                    <button onClick={notmaybe}>vielleicht entfernen</button>
-                </div>
-            </div>
-        </div>
+                <AgGridReact
+                    ref={gridRef}
+                    theme={theme}
+                    rowData={rowData}
+                    columnDefs={columns}
+                    rowSelection={rowSelection}
+                    pagination
+                    paginationPageSize={50}
+                    getRowId={(params) => params.data.id}
+                />
+            </Box>
+
+
+            <Stack spacing={1}>
+                {/* Header */}
+                <Typography variant="h5">Aktueller Stand</Typography>
+
+                {/* Stats */}
+                <Stack spacing={0.5}>
+                    <Typography>
+                        Alle Dörfer: <strong>{villageCounttotal.toLocaleString()}</strong>
+                    </Typography>
+
+                    <Typography>
+                        Siegerdörfer: <strong>{sumVillagesWinner}</strong>{" "}
+                        ({percentVillagesWinner}%)
+                    </Typography>
+
+                    <Typography>
+                        Mit Safe Löschen Dörfer: <strong>{sumVillagesSave}</strong>{" "}
+                        ({percentVillagesSave}%)
+                    </Typography>
+
+                    <Typography>
+                        Mit Vielleicht Löschen Dörfer: <strong>{sumVillagesMaybe}</strong>{" "}
+                        ({percentVillagesMaybe}%)
+                    </Typography>
+                </Stack>
+
+                {/* Action Buttons */}
+                <Stack direction="row" spacing={2} flexWrap="wrap">
+                    <Button variant="contained" color="success" onClick={winner}>
+                        Als Sieger festlegen
+                    </Button>
+                    <Button variant="contained" color="warning" onClick={willDelte}>
+                        Als Safe löschen
+                    </Button>
+                    <Button variant="contained" color="info" onClick={maybe}>
+                        Vielleicht löschen
+                    </Button>
+                </Stack>
+
+                <Stack direction="row" spacing={2} flexWrap="wrap">
+                    <Button variant="outlined" color="success" onClick={notwinner}>
+                        Sieger entfernen
+                    </Button>
+                    <Button variant="outlined" color="warning" onClick={willnotDelte}>
+                        Safe löschen entfernen
+                    </Button>
+                    <Button variant="outlined" color="info" onClick={notmaybe}>
+                        Vielleicht entfernen
+                    </Button>
+                </Stack>
+            </Stack>
+        </Box>
+
+
 
     );
 }
 
+export default DataTable;

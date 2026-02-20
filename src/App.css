@@ -1,38 +1,39 @@
-.App {
-  text-align: center;
+/* ================================
+   AG GRID MATERIAL – DARK/LIGHT FIX
+   ================================ */
+
+/* Root & Viewports */
+.ag-theme-material,
+.ag-theme-material .ag-root-wrapper,
+.ag-theme-material .ag-root,
+.ag-theme-material .ag-body-viewport,
+.ag-theme-material .ag-center-cols-viewport,
+.ag-theme-material .ag-center-cols-container {
+  background-color: var(--ag-background-color) !important;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* HEADER */
+.ag-theme-material .ag-header,
+.ag-theme-material .ag-header-viewport,
+.ag-theme-material .ag-header-row,
+.ag-theme-material .ag-header-cell,
+.ag-theme-material .ag-header-cell-comp-wrapper {
+  background-color: var(--ag-header-background-color) !important;
+  color: var(--ag-foreground-color) !important;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* ZELLEN */
+.ag-theme-material .ag-cell {
+  background-color: transparent !important;
+  color: var(--ag-foreground-color) !important;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+/* ZEILEN */
+.ag-theme-material .ag-row {
+  background-color: var(--ag-row-background-color) !important;
+}
+.app-container {
+  height: 100%;
+  margin-left: 10px;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}

@@ -3,20 +3,18 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import './App.css';
 import App from './App';
-//import Tabelle from './Tabelle';
-import Tabelle from'./TabelleAG-Grid';
 import reportWebVitals from './reportWebVitals';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  
-  <React.StrictMode>
-    
-    <Tabelle />
 
+  <React.StrictMode>
+    <div className="app-container">
+      <App />
+    </div>
   </React.StrictMode>
-  
+
 );
 
 // If you want to start measuring performance in your app, pass a function
