@@ -8,6 +8,7 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import { useTheme } from '@mui/material/styles';
 import { RowGroupingModule } from 'ag-grid-enterprise';
+import { Select, MenuItem } from "@mui/material";
 import {
     AllCommunityModule,
     ModuleRegistry,
@@ -19,16 +20,18 @@ import './App.css';
 ModuleRegistry.registerModules([AllCommunityModule, RowGroupingModule]);
 
 
+let world = 'de250';
 
-async function loadAllyData() {
-    const allyurl = 'https://corsproxy.io/?https://de242.die-staemme.de/map/ally.txt';
+async function loadAllyData(world) {
+
+    const allyurl = 'https://corsproxy.io/?https://' + world + '.die-staemme.de/map/ally.txt';
     const allyresponse = await fetch(allyurl);
     const allytext = await allyresponse.text();
     // Plus-Zeichen durch Leerzeichen ersetzen
     const allydecodedText = allytext.replace(/\+/g, ' ');
     const finalAllyText = decodeURIComponent(allydecodedText);
 
-    const playerurl = 'https://corsproxy.io/?https://de242.die-staemme.de/map/player.txt';
+    const playerurl = 'https://corsproxy.io/?https://' + world + '.die-staemme.de/map/player.txt';
     const playerresponse = await fetch(playerurl);
     const playertext = await playerresponse.text();
     const playerdecodedText = playertext.replace(/\+/g, ' ');
@@ -107,6 +110,7 @@ async function loadAllyData() {
 
             // Allianzfelder (explizit, damit sie immer existieren)
             alliance_id: alliance.id ?? 0,
+            alliance_rank: alliance.rank ?? 0,
             alliance_name: alliance.name ?? "N/A",
             tag: alliance.tag ?? "N/A",
             members: alliance.members ?? "N/A",
@@ -114,25 +118,39 @@ async function loadAllyData() {
 
         };
     });
-
+    leftJoined.sort((a, b) => a.alliance_rank - b.alliance_rank);
     console.log("leftJoined:", leftJoined);
 
     return leftJoined;
 }
 
+async function getFullServerList() {
+    const serverListUrl = 'https://corsproxy.io/?https://www.die-staemme.de/backend/get_servers.php';
+
+    const response = await fetch(serverListUrl);
+    const text = await response.text();
+
+    // Array erzeugen
+    return [...text.matchAll(/"(de\d+)"/g)].map(m => m[1]);
+}
+
 
 function DataTable() {
 
-    const [rowData, setRowData] = useState([]);
+    const [servers, setServers] = React.useState([]);
+    const [server, setServer] = React.useState("de250");
+
+    let [rowData, setRowData] = React.useState([]);
 
     useEffect(() => {
+        setRowData([]); // Leere Daten setzen, um vorherige Daten zu entfernen
         async function loadData() {
-            const data = await loadAllyData(); // ⬅️ deine Funktion
-            setRowData(data);                  // ⬅️ HIER passiert es
+            const data = await loadAllyData(server);
+            setRowData(data);
         }
 
         loadData();
-    }, []);
+    }, [server]);
 
     const [sumVillagesWinner, setSumVillagesWinner] = useState(0);
     const [sumVillagesSave, setSumVillagesSave] = useState(0);
@@ -350,7 +368,7 @@ function DataTable() {
         }
 
         loadVillageCountTotal();
-    });
+    },[rowData]);
 
     async function getNumberVillagesTotal() {
         const data = rowData;
@@ -466,97 +484,116 @@ function DataTable() {
 
     const isDark = theme.palette.mode === "dark";
 
+
+
+    React.useEffect(() => {
+        getFullServerList().then(setServers);
+    }, []);
+
     return (
-        <Box sx={{
-            width: 1370, display: "flex", flexDirection: "column", gap: 3, '& .ag-theme-material': {
-                '--ag-background-color': isDark ? '#121212' : '#ffffff',
-                '--ag-row-background-color': isDark ? '#1e1e1e' : '#ffffff',
-                '--ag-header-background-color': isDark ? '#1e1e1e' : '#f5f5f5',
-                '--ag-foreground-color': isDark ? '#ffffff' : '#000000',
-                '--ag-border-color': isDark
-                    ? 'rgba(255,255,255,0.12)'
-                    : 'rgba(0,0,0,0.12)',
-                '--ag-row-hover-color': isDark
-                    ? 'rgba(255,255,255,0.08)'
-                    : 'rgba(0,0,0,0.04)',
-            },
-        }}>
-            {/* Grid */}
-            <Box
-                key={theme.palette.mode}
-                className="ag-theme-material"
-                sx={{
-                    height: 600, width: "100%",
+        <div className="tabelle-container">
+            <Box className="test" sx={{
+                width: 1370, display: "flex", flexDirection: "column", gap: 3, '& .ag-theme-material': {
+                    '--ag-background-color': isDark ? '#121212' : '#ffffff',
+                    '--ag-row-background-color': isDark ? '#1e1e1e' : '#ffffff',
+                    '--ag-header-background-color': isDark ? '#1e1e1e' : '#f5f5f5',
+                    '--ag-foreground-color': isDark ? '#ffffff' : '#000000',
+                    '--ag-border-color': isDark
+                        ? 'rgba(255,255,255,0.12)'
+                        : 'rgba(0,0,0,0.12)',
+                    '--ag-row-hover-color': isDark
+                        ? 'rgba(255,255,255,0.08)'
+                        : 'rgba(0,0,0,0.04)',
+                },
+            }}>
+                {/* Grid */}
+                <Box
+                    key={theme.palette.mode}
+                    className="ag-theme-material"
+                    sx={{
+                        height: 600, width: "100%",
 
 
-                }}
-            >
+                    }}
+                >
 
-                <AgGridReact
-                    ref={gridRef}
-                    theme={theme}
-                    rowData={rowData}
-                    columnDefs={columns}
-                    rowSelection={rowSelection}
-                    pagination
-                    paginationPageSize={50}
-                    getRowId={(params) => params.data.id}
-                />
+                    <AgGridReact
+                        ref={gridRef}
+                        theme={theme}
+                        rowData={rowData}
+                        columnDefs={columns}
+                        rowSelection={rowSelection}
+                        pagination
+                        paginationPageSize={50}
+                        getRowId={(params) => params.data.id}
+                    />
+                </Box>
+                <Box>
+                    <Select  value={server} onChange={(e) => setServer(e.target.value)}>
+                        {servers.map(s => (
+                            <MenuItem key={s} value={s}>
+                                {s}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </Box>
+
+
+
+
+                <Stack spacing={1}>
+                    {/* Header */}
+                    <Typography variant="h5">Aktueller Stand</Typography>
+
+                    {/* Stats */}
+                    <Stack spacing={0.5}>
+                        <Typography>
+                            Alle Dörfer: <strong>{villageCounttotal.toLocaleString()}</strong>
+                        </Typography>
+
+                        <Typography>
+                            Siegerdörfer: <strong>{sumVillagesWinner}</strong>{" "}
+                            ({percentVillagesWinner}%)
+                        </Typography>
+
+                        <Typography>
+                            Mit Safe Löschen Dörfer: <strong>{sumVillagesSave}</strong>{" "}
+                            ({percentVillagesSave}%)
+                        </Typography>
+
+                        <Typography>
+                            Mit Vielleicht Löschen Dörfer: <strong>{sumVillagesMaybe}</strong>{" "}
+                            ({percentVillagesMaybe}%)
+                        </Typography>
+                    </Stack>
+
+                    {/* Action Buttons */}
+                    <Stack direction="row" spacing={2} flexWrap="wrap">
+                        <Button variant="contained" color="success" onClick={winner}>
+                            Als Sieger festlegen
+                        </Button>
+                        <Button variant="contained" color="warning" onClick={willDelte}>
+                            Als Safe löschen
+                        </Button>
+                        <Button variant="contained" color="info" onClick={maybe}>
+                            Vielleicht löschen
+                        </Button>
+                    </Stack>
+
+                    <Stack direction="row" spacing={2} flexWrap="wrap">
+                        <Button variant="outlined" color="success" onClick={notwinner}>
+                            Sieger entfernen
+                        </Button>
+                        <Button variant="outlined" color="warning" onClick={willnotDelte}>
+                            Safe löschen entfernen
+                        </Button>
+                        <Button variant="outlined" color="info" onClick={notmaybe}>
+                            Vielleicht entfernen
+                        </Button>
+                    </Stack>
+                </Stack>
             </Box>
-
-
-            <Stack spacing={1}>
-                {/* Header */}
-                <Typography variant="h5">Aktueller Stand</Typography>
-
-                {/* Stats */}
-                <Stack spacing={0.5}>
-                    <Typography>
-                        Alle Dörfer: <strong>{villageCounttotal.toLocaleString()}</strong>
-                    </Typography>
-
-                    <Typography>
-                        Siegerdörfer: <strong>{sumVillagesWinner}</strong>{" "}
-                        ({percentVillagesWinner}%)
-                    </Typography>
-
-                    <Typography>
-                        Mit Safe Löschen Dörfer: <strong>{sumVillagesSave}</strong>{" "}
-                        ({percentVillagesSave}%)
-                    </Typography>
-
-                    <Typography>
-                        Mit Vielleicht Löschen Dörfer: <strong>{sumVillagesMaybe}</strong>{" "}
-                        ({percentVillagesMaybe}%)
-                    </Typography>
-                </Stack>
-
-                {/* Action Buttons */}
-                <Stack direction="row" spacing={2} flexWrap="wrap">
-                    <Button variant="contained" color="success" onClick={winner}>
-                        Als Sieger festlegen
-                    </Button>
-                    <Button variant="contained" color="warning" onClick={willDelte}>
-                        Als Safe löschen
-                    </Button>
-                    <Button variant="contained" color="info" onClick={maybe}>
-                        Vielleicht löschen
-                    </Button>
-                </Stack>
-
-                <Stack direction="row" spacing={2} flexWrap="wrap">
-                    <Button variant="outlined" color="success" onClick={notwinner}>
-                        Sieger entfernen
-                    </Button>
-                    <Button variant="outlined" color="warning" onClick={willnotDelte}>
-                        Safe löschen entfernen
-                    </Button>
-                    <Button variant="outlined" color="info" onClick={notmaybe}>
-                        Vielleicht entfernen
-                    </Button>
-                </Stack>
-            </Stack>
-        </Box>
+        </div>
 
 
 
