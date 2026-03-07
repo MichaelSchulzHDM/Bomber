@@ -6,6 +6,9 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import NativeSelect from '@mui/material/NativeSelect';
 import { useTheme } from '@mui/material/styles';
 import { RowGroupingModule } from 'ag-grid-enterprise';
 import { Select, MenuItem } from "@mui/material";
@@ -18,9 +21,6 @@ import {
 import './App.css';
 
 ModuleRegistry.registerModules([AllCommunityModule, RowGroupingModule]);
-
-
-let world = 'de250';
 
 async function loadAllyData(world) {
 
@@ -368,7 +368,7 @@ function DataTable() {
         }
 
         loadVillageCountTotal();
-    },[rowData]);
+    });
 
     async function getNumberVillagesTotal() {
         const data = rowData;
@@ -492,6 +492,19 @@ function DataTable() {
 
     return (
         <div className="tabelle-container">
+            <box sx={{ display: "flex", justifyContent: "flex-end", marginBottom: 2 }}>
+                
+                <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
+                    <InputLabel variant="standard" htmlFor="uncontrolled-native">Welt</InputLabel>
+                    <Select value={server} onChange={(e) => setServer(e.target.value)}>
+                        {servers.map(s => (
+                            <MenuItem key={s} value={s}>
+                                {s}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+            </box>
             <Box className="test" sx={{
                 width: 1370, display: "flex", flexDirection: "column", gap: 3, '& .ag-theme-material': {
                     '--ag-background-color': isDark ? '#121212' : '#ffffff',
@@ -528,22 +541,13 @@ function DataTable() {
                         getRowId={(params) => params.data.id}
                     />
                 </Box>
-                <Box>
-                    <Select  value={server} onChange={(e) => setServer(e.target.value)}>
-                        {servers.map(s => (
-                            <MenuItem key={s} value={s}>
-                                {s}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </Box>
+
 
 
 
 
                 <Stack spacing={1}>
-                    {/* Header */}
-                    <Typography variant="h5">Aktueller Stand</Typography>
+                    
 
                     {/* Stats */}
                     <Stack spacing={0.5}>
